@@ -42,10 +42,15 @@ data "aws_iam_policy_document" "trust" {
     }
 
     # master e homolog fazem CI/deploy; pull_request roda o CI (plan/testes).
+    # O GitHub emite o subject IMUTÁVEL: repo:OWNER@<owner_id>/REPO@<repo_id>:...
+    # O `@*` tolera os IDs numéricos; mantemos o formato clássico como fallback.
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
+        "repo:${var.github_owner}@*/${each.key}@*:ref:refs/heads/master",
+        "repo:${var.github_owner}@*/${each.key}@*:ref:refs/heads/homolog",
+        "repo:${var.github_owner}@*/${each.key}@*:pull_request",
         "repo:${var.github_owner}/${each.key}:ref:refs/heads/master",
         "repo:${var.github_owner}/${each.key}:ref:refs/heads/homolog",
         "repo:${var.github_owner}/${each.key}:pull_request",
