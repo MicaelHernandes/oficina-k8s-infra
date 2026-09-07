@@ -2,7 +2,8 @@
 # OIDC federado GitHub Actions -> AWS.
 #
 # Um OIDC provider + uma IAM role por repositório, com trust restrito ao repo
-# e à branch master. Cada role recebe permissões pragmáticas ao seu escopo.
+# nas branches master/homolog e em pull_request. Cada role recebe permissões
+# pragmáticas ao seu escopo.
 #
 # Este módulo é o ÚNICO alvo do bootstrap local:
 #   terraform apply -target=module.github_oidc
@@ -40,10 +41,15 @@ data "aws_iam_policy_document" "trust" {
       values   = ["sts.amazonaws.com"]
     }
 
+    # master e homolog fazem CI/deploy; pull_request roda o CI (plan/testes).
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_owner}/${each.key}:ref:refs/heads/master"]
+      values = [
+        "repo:${var.github_owner}/${each.key}:ref:refs/heads/master",
+        "repo:${var.github_owner}/${each.key}:ref:refs/heads/homolog",
+        "repo:${var.github_owner}/${each.key}:pull_request",
+      ]
     }
   }
 }
