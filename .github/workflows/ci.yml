@@ -30,6 +30,12 @@ jobs:
         with:
           terraform_wrapper: false
 
+      - name: DEBUG sub do OIDC (temporário)
+        run: |
+          TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value')
+          echo "$TOKEN" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | jq '{sub, aud}' || true
+
       - name: Configura credenciais AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
