@@ -1,0 +1,12 @@
+# Copie para terraform.tfvars (git-ignored) OU forneça via TF_VAR_* no CI.
+# O token da Cloudflare NUNCA deve ser commitado — no CI vem do secret
+# CLOUDFLARE_API_TOKEN (TF_VAR_cloudflare_api_token).
+
+region          = "us-east-1"
+project         = "oficina"
+cluster_name    = "oficina"
+cluster_version = "1.31"
+domain          = "codefive.com.br"
+github_owner    = "MicaelHernandes"
+
+# cloudflare_api_token = "defina via TF_VAR_cloudflare_api_token / secret"

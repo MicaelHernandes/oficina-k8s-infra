@@ -1,0 +1,54 @@
+name: Deploy (produção)
+
+# Apply automático apenas na branch master (produção).
+# environment: production permite exigir aprovação manual antes do apply.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC -> AWS
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+jobs:
+  terraform:
+    name: terraform apply
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Configura credenciais AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      # Fase 1: cria a rede, o cluster e o OIDC primeiro. Os providers
+      # kubernetes/helm dependem do endpoint do EKS (só conhecido após criá-lo).
+      - name: Apply base (VPC + EKS + OIDC + ECR)
+        run: |
+          terraform apply -auto-approve -input=false \
+            -target=module.vpc \
+            -target=module.eks \
+            -target=module.github_oidc \
+            -target=module.ecr
+
+      # Fase 2: aplica o restante (ALB controller, monitoring, DNS/TLS, SSM).
+      - name: Apply completo
+        run: terraform apply -auto-approve -input=false

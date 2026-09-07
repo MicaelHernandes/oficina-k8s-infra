@@ -1,0 +1,21 @@
+# Terraform
+.terraform/
+.terraform.tfstate.lock.info
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Variáveis locais / segredos — nunca commitar
+*.tfvars
+!terraform.tfvars.example
+*.auto.tfvars
+.env
+
+# O lockfile de providers DEVE ser commitado:
+!.terraform.lock.hcl
+
+# Editores
+.idea/
+.vscode/
+*.swp
