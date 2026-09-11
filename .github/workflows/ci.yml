@@ -52,7 +52,7 @@ jobs:
       - name: tflint
         run: |
           tflint --init
-          tflint --recursive
+          tflint --recursive --minimum-failure-severity=error
 
       - name: Terraform plan
         id: plan

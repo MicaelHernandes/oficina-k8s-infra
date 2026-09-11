@@ -42,6 +42,8 @@ data "aws_iam_policy_document" "trust" {
     }
 
     # master e homolog fazem CI/deploy; pull_request roda o CI (plan/testes).
+    # Jobs com `environment:` (deploy.yml usa `production`) recebem o subject
+    # `...:environment:production` no lugar de `...:ref:refs/heads/<branch>`.
     # O GitHub emite o subject IMUTÁVEL: repo:OWNER@<owner_id>/REPO@<repo_id>:...
     # O `@*` tolera os IDs numéricos; mantemos o formato clássico como fallback.
     condition {
@@ -51,9 +53,11 @@ data "aws_iam_policy_document" "trust" {
         "repo:${var.github_owner}@*/${each.key}@*:ref:refs/heads/master",
         "repo:${var.github_owner}@*/${each.key}@*:ref:refs/heads/homolog",
         "repo:${var.github_owner}@*/${each.key}@*:pull_request",
+        "repo:${var.github_owner}@*/${each.key}@*:environment:production",
         "repo:${var.github_owner}/${each.key}:ref:refs/heads/master",
         "repo:${var.github_owner}/${each.key}:ref:refs/heads/homolog",
         "repo:${var.github_owner}/${each.key}:pull_request",
+        "repo:${var.github_owner}/${each.key}:environment:production",
       ]
     }
   }
@@ -69,27 +73,34 @@ resource "aws_iam_role" "repo" {
 
 # Permissões pragmáticas por repo (escopo de serviços que cada pipeline usa).
 locals {
+  # Backend do Terraform (state no S3 + lock no DynamoDB): necessário para os
+  # repos que rodam terraform (k8s-infra, db-infra, auth-lambda).
+  tf_backend_actions = [
+    "s3:ListBucket", "s3:GetObject", "s3:PutObject", "s3:DeleteObject",
+    "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:DescribeTable",
+  ]
+
   repo_policies = {
     "oficina-k8s-infra" = {
-      actions = [
+      actions = concat([
         "ec2:*", "eks:*", "ecr:*", "elasticloadbalancing:*",
         "iam:*", "acm:*", "ssm:*", "autoscaling:*", "kms:*",
         "secretsmanager:*", "logs:*", "cloudwatch:*", "sts:*"
-      ]
+      ], local.tf_backend_actions)
     }
     "oficina-db-infra" = {
-      actions = [
+      actions = concat([
         "rds:*", "ec2:Describe*", "ec2:*SecurityGroup*", "ec2:*Subnet*",
         "secretsmanager:*", "ssm:*", "kms:*", "iam:PassRole",
         "iam:CreateServiceLinkedRole", "logs:*", "sts:*"
-      ]
+      ], local.tf_backend_actions)
     }
     "oficina-auth-lambda" = {
-      actions = [
+      actions = concat([
         "lambda:*", "apigateway:*", "ec2:Describe*", "ec2:*NetworkInterface*",
         "ec2:*SecurityGroup*", "iam:*", "secretsmanager:*", "ssm:*",
         "logs:*", "sts:*"
-      ]
+      ], local.tf_backend_actions)
     }
     "oficina-api" = {
       actions = [
