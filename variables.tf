@@ -35,9 +35,9 @@ variable "azs" {
 }
 
 variable "node_instance_type" {
-  description = "Tipo de instância do managed node group."
+  description = "Tipo de instância do managed node group. A conta está no Free plan da AWS, que só lança tipos free-tier-eligible (t3.medium é recusado)."
   type        = string
-  default     = "t3.medium"
+  default     = "m7i-flex.large"
 }
 
 variable "node_min_size" {
@@ -49,7 +49,7 @@ variable "node_min_size" {
 variable "node_desired_size" {
   description = "Quantidade desejada de nós no node group."
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "node_max_size" {

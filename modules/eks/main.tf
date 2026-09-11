@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Cluster EKS gerenciado.
 #
-# - 1 managed node group t3.medium (min 1, desired 2, max 3). O HPA (repo 4)
+# - 1 managed node group m7i-flex.large (min 1, desired 1, max 3). O HPA (repo 4)
 #   escala pods; a pressão de pods pode disparar novos nós até o max.
 # - Nós nas subnets PÚBLICAS (sem NAT), com IP público para registrar no
 #   control plane e puxar imagens do ECR.
