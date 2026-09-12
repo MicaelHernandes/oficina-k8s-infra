@@ -81,3 +81,9 @@ variable "ecr_repository_name" {
   type        = string
   default     = "oficina-api"
 }
+
+variable "enable_logs_vpc_endpoint" {
+  description = "Cria o VPC endpoint do CloudWatch Logs nas subnets privadas (~US$7/mês por AZ). Sem ele, a Lambda de auth do repo 1 roda sem logs, porque as subnets privadas não têm NAT."
+  type        = bool
+  default     = true
+}

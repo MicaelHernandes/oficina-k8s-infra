@@ -22,7 +22,10 @@ module "vpc" {
   cluster_name = var.cluster_name
   vpc_cidr     = var.vpc_cidr
   azs          = var.azs
+  region       = var.region
   tags         = local.tags
+
+  enable_logs_vpc_endpoint = var.enable_logs_vpc_endpoint
 }
 
 # --- Cluster EKS ------------------------------------------------------------
