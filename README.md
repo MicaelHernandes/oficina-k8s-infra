@@ -12,7 +12,7 @@ Infraestrutura Kubernetes na AWS (Terraform) do **Tech Challenge Fase 3 — Ofic
 ## Tecnologias
 
 - **Terraform** (backend S3 + lock DynamoDB), providers `aws`, `cloudflare`, `kubernetes`, `helm`.
-- **Amazon EKS** (K8s 1.31), managed node group `m7i-flex.large` (1 nó, máx. 3) — HPA nativo. Tipo free-tier-eligible, exigido pelo Free plan da conta.
+- **Amazon EKS** (K8s 1.31), managed node group `m7i-flex.large` **Spot** (1 nó, máx. 3) — HPA nativo. Tipo free-tier-eligible, exigido pelo Free plan da conta.
 - **Amazon ECR**, **Amazon VPC** (2 AZs, **sem NAT Gateway** para reduzir custo).
 - **AWS Load Balancer Controller** (Ingress → ALB) + **metrics-server** (HPA).
 - **ACM** validado por DNS na **Cloudflare** (`codefive.com.br`).
@@ -52,7 +52,7 @@ O ALB é **único e compartilhado** entre `app.codefive.com.br` (repo 4) e `graf
 |---|---|
 | `modules/vpc` | VPC 2 AZs, subnets pub/priv, sem NAT, tags de subnet para o ALB Controller, VPC endpoint do CloudWatch Logs |
 | `modules/eks` | Cluster EKS, node group `m7i-flex.large` (1–3), add-ons, access entry para o deploy da app |
-| `modules/ecr` | Repositório `oficina-api`, lifecycle de 10 imagens |
+| `modules/ecr` | Repositório `oficina-api`, lifecycle de 3 imagens |
 | `modules/alb-controller` | IRSA + helm do AWS Load Balancer Controller + metrics-server |
 | `modules/dns-tls` | Certificado ACM (SAN api/app/grafana) + registros de validação na Cloudflare |
 | `modules/monitoring` | kube-prometheus-stack + Loki, Grafana via Ingress ALB, secret do admin |
@@ -108,7 +108,20 @@ PRs e pushes em `homolog` rodam `.github/workflows/ci.yml` (fmt, validate, tflin
 
 ## Custo estimado
 
-EKS ~US$73/mês + 1× `m7i-flex.large` ~US$70 + ALB ~US$16 + VPC endpoint do CloudWatch Logs ~US$14 (2 AZs) — consumido dos créditos do Free plan. O endpoint sai com `enable_logs_vpc_endpoint = false`, ao custo de a Lambda de auth (repo 1) ficar sem logs. **Destruir após a apresentação.**
+Configuração enxuta, consumida dos créditos do Free plan:
+
+| Item | ~US$/mês |
+|---|---|
+| Control plane do EKS | 73 |
+| 1× `m7i-flex.large` **Spot** | 21 |
+| ALB compartilhado (app + Grafana) | 16 |
+| Volume raiz do nó (20 GB gp3) | 2 |
+| RDS `db.t4g.micro` (repo 3) | Free tier |
+| **Total** | **~112** |
+
+Prometheus (retenção 6h) e Loki rodam sem volume, então não há EBS além do disco do nó. O VPC endpoint do CloudWatch Logs (~US$14) vem **desligado**; ligue com `enable_logs_vpc_endpoint = true` quando precisar dos logs da Lambda de auth. Para trocar Spot por capacidade garantida: `node_capacity_type = "ON_DEMAND"` (~US$70 em vez de ~US$21).
+
+**Destruir o ambiente após a apresentação.** **Destruir após a apresentação.**
 
 ## Destruir tudo
 

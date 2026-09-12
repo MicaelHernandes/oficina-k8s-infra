@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Cluster EKS gerenciado.
 #
-# - 1 managed node group m7i-flex.large (min 1, desired 1, max 3). O HPA (repo 4)
+# - 1 managed node group m7i-flex.large SPOT (min 1, desired 1, max 3). O HPA (repo 4)
 #   escala pods; a pressão de pods pode disparar novos nós até o max.
 # - Nós nas subnets PÚBLICAS (sem NAT), com IP público para registrar no
 #   control plane e puxar imagens do ECR.
@@ -34,6 +34,7 @@ module "eks" {
   eks_managed_node_groups = {
     default = {
       instance_types = [var.node_instance_type]
+      capacity_type  = var.node_capacity_type
       min_size       = var.node_min_size
       desired_size   = var.node_desired_size
       max_size       = var.node_max_size
