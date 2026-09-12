@@ -91,6 +91,9 @@ locals {
     "oficina-db-infra" = {
       actions = concat([
         "rds:*", "ec2:Describe*", "ec2:*SecurityGroup*", "ec2:*Subnet*",
+        # CreateTags/DeleteTags: o provider aplica default_tags já na criação
+        # do SG (TagSpecification), o que exige essas ações.
+        "ec2:CreateTags", "ec2:DeleteTags",
         "secretsmanager:*", "ssm:*", "kms:*", "iam:PassRole",
         "iam:CreateServiceLinkedRole", "logs:*", "sts:*"
       ], local.tf_backend_actions)
@@ -98,7 +101,8 @@ locals {
     "oficina-auth-lambda" = {
       actions = concat([
         "lambda:*", "apigateway:*", "ec2:Describe*", "ec2:*NetworkInterface*",
-        "ec2:*SecurityGroup*", "iam:*", "secretsmanager:*", "ssm:*",
+        "ec2:*SecurityGroup*", "ec2:CreateTags", "ec2:DeleteTags",
+        "iam:*", "secretsmanager:*", "ssm:*",
         "logs:*", "sts:*"
       ], local.tf_backend_actions)
     }
