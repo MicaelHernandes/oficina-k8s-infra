@@ -12,7 +12,7 @@ Infraestrutura Kubernetes na AWS (Terraform) do **Tech Challenge Fase 3 — Ofic
 ## Tecnologias
 
 - **Terraform** (backend S3 + lock DynamoDB), providers `aws`, `cloudflare`, `kubernetes`, `helm`.
-- **Amazon EKS** (K8s 1.31), managed node group `t3.medium` (1–3 nós) — HPA nativo.
+- **Amazon EKS** (K8s 1.31), managed node group `m7i-flex.large` (1 nó, máx. 3) — HPA nativo. Tipo free-tier-eligible, exigido pelo Free plan da conta.
 - **Amazon ECR**, **Amazon VPC** (2 AZs, **sem NAT Gateway** para reduzir custo).
 - **AWS Load Balancer Controller** (Ingress → ALB) + **metrics-server** (HPA).
 - **ACM** validado por DNS na **Cloudflare** (`codefive.com.br`).
@@ -27,7 +27,7 @@ flowchart TB
     subgraph VPC["VPC 10.0.0.0/16 (2 AZs, sem NAT)"]
       subgraph Pub["Subnets públicas"]
         ALB["ALB compartilhado<br/>(IngressGroup)"]
-        Nodes["EKS node group<br/>t3.medium (1-3)"]
+        Nodes["EKS node group<br/>m7i-flex.large (1-3)"]
       end
       subgraph Priv["Subnets privadas"]
         RDSslot["RDS (repo 3)"]
@@ -51,7 +51,7 @@ O ALB é **único e compartilhado** entre `app.codefive.com.br` (repo 4) e `graf
 | Módulo | Conteúdo |
 |---|---|
 | `modules/vpc` | VPC 2 AZs, subnets pub/priv, sem NAT, tags de subnet para o ALB Controller |
-| `modules/eks` | Cluster EKS, node group `t3.medium` (1–3), add-ons, access entry para o deploy da app |
+| `modules/eks` | Cluster EKS, node group `m7i-flex.large` (1–3), add-ons, access entry para o deploy da app |
 | `modules/ecr` | Repositório `oficina-api`, lifecycle de 10 imagens |
 | `modules/alb-controller` | IRSA + helm do AWS Load Balancer Controller + metrics-server |
 | `modules/dns-tls` | Certificado ACM (SAN api/app/grafana) + registros de validação na Cloudflare |
@@ -108,7 +108,7 @@ PRs e pushes em `homolog` rodam `.github/workflows/ci.yml` (fmt, validate, tflin
 
 ## Custo estimado
 
-EKS ~US$73/mês + `t3.medium` ~US$30 + ALB ~US$16. **Destruir após a apresentação.**
+EKS ~US$73/mês + 1× `m7i-flex.large` ~US$70 + ALB ~US$16 (consumido dos créditos do Free plan). **Destruir após a apresentação.**
 
 ## Destruir tudo
 
