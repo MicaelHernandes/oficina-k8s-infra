@@ -52,3 +52,9 @@ variable "tags" {
   description = "Tags padrão."
   type        = map(string)
 }
+
+variable "node_capacity_type" {
+  description = "Modelo de compra do node group: SPOT (~70% mais barato, pode ser interrompido) ou ON_DEMAND."
+  type        = string
+  default     = "SPOT"
+}
