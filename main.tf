@@ -22,7 +22,10 @@ module "vpc" {
   cluster_name = var.cluster_name
   vpc_cidr     = var.vpc_cidr
   azs          = var.azs
+  region       = var.region
   tags         = local.tags
+
+  enable_logs_vpc_endpoint = var.enable_logs_vpc_endpoint
 }
 
 # --- Cluster EKS ------------------------------------------------------------
@@ -37,6 +40,7 @@ module "eks" {
   private_subnets = module.vpc.private_subnet_ids
 
   node_instance_type = var.node_instance_type
+  node_capacity_type = var.node_capacity_type
   node_min_size      = var.node_min_size
   node_desired_size  = var.node_desired_size
   node_max_size      = var.node_max_size

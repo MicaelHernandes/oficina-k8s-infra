@@ -40,3 +40,44 @@ module "vpc" {
 
   tags = var.tags
 }
+
+# ---------------------------------------------------------------------------
+# VPC endpoint (interface) para o CloudWatch Logs.
+#
+# As subnets privadas não têm NAT, então a Lambda de auth (repo 1) não alcança
+# o endpoint público do CloudWatch Logs e roda sem gerar log nenhum. O endpoint
+# de interface dá esse acesso por dentro da VPC.
+#
+# Custo: ~US$7/mês por AZ (2 AZs) + tráfego. Coloque
+# enable_logs_vpc_endpoint = false para desligar.
+# ---------------------------------------------------------------------------
+resource "aws_security_group" "vpce_logs" {
+  count = var.enable_logs_vpc_endpoint ? 1 : 0
+
+  name        = "${var.project}-vpce-logs"
+  description = "HTTPS de dentro da VPC para o endpoint do CloudWatch Logs"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "HTTPS de dentro da VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  tags = merge(var.tags, { Name = "${var.project}-vpce-logs" })
+}
+
+resource "aws_vpc_endpoint" "logs" {
+  count = var.enable_logs_vpc_endpoint ? 1 : 0
+
+  vpc_id              = module.vpc.vpc_id
+  service_name        = "com.amazonaws.${var.region}.logs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = module.vpc.private_subnets
+  security_group_ids  = [aws_security_group.vpce_logs[0].id]
+  private_dns_enabled = true
+
+  tags = merge(var.tags, { Name = "${var.project}-vpce-logs" })
+}
