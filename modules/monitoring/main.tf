@@ -79,6 +79,18 @@ resource "helm_release" "kube_prometheus_stack" {
     alertmanager = {
       enabled = true
     }
+    # EKS: o control plane é gerenciado pela AWS e roda fora do cluster.
+    # Scheduler e controller-manager não expõem métricas, então os
+    # ServiceMonitors do chart não acham alvo e as regras
+    # absent(up{job="kube-scheduler"|"kube-controller-manager"} == 1)
+    # disparam KubeSchedulerDown e KubeControllerManagerDown (critical) o
+    # tempo todo, com os componentes saudáveis. Desliga scrape e regras deles.
+    kubeScheduler = {
+      enabled = false
+    }
+    kubeControllerManager = {
+      enabled = false
+    }
   })]
 
   depends_on = [kubernetes_namespace_v1.monitoring]

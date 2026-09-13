@@ -44,9 +44,10 @@ module "vpc" {
 # ---------------------------------------------------------------------------
 # VPC endpoint (interface) para o CloudWatch Logs.
 #
-# As subnets privadas não têm NAT, então a Lambda de auth (repo 1) não alcança
-# o endpoint público do CloudWatch Logs e roda sem gerar log nenhum. O endpoint
-# de interface dá esse acesso por dentro da VPC.
+# Opcional e desligado por padrão. As subnets privadas não têm NAT, então uma
+# carga nelas que chame a API do CloudWatch Logs diretamente precisa deste
+# endpoint. Não é o caso das Lambdas (repo 1): o próprio serviço Lambda envia os
+# logs delas ao CloudWatch, mesmo sem saída de rede na subnet.
 #
 # Custo: ~US$7/mês por AZ (2 AZs) + tráfego. Coloque
 # enable_logs_vpc_endpoint = false para desligar.
