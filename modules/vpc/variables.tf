@@ -29,7 +29,7 @@ variable "region" {
 }
 
 variable "enable_logs_vpc_endpoint" {
-  description = "Cria o VPC endpoint de interface do CloudWatch Logs nas subnets privadas, para a Lambda de auth (repo 1) conseguir logar sem NAT. Desligado por padrão (custo)."
+  description = "Cria o VPC endpoint de interface do CloudWatch Logs nas subnets privadas. Desligado por padrão (custo). Não é necessário para os logs das Lambdas, que o serviço Lambda envia por conta própria."
   type        = bool
   default     = false
 }
