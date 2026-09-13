@@ -119,7 +119,7 @@ Configuração enxuta, consumida dos créditos do Free plan:
 | RDS `db.t4g.micro` (repo 3) | Free tier |
 | **Total** | **~112** |
 
-Prometheus (retenção 6h) e Loki rodam sem volume, então não há EBS além do disco do nó. O VPC endpoint do CloudWatch Logs (~US$14) vem **desligado**; ligue com `enable_logs_vpc_endpoint = true` quando precisar dos logs da Lambda de auth. Para trocar Spot por capacidade garantida: `node_capacity_type = "ON_DEMAND"` (~US$70 em vez de ~US$21).
+Prometheus (retenção 6h) e Loki rodam sem volume, então não há EBS além do disco do nó. O VPC endpoint do CloudWatch Logs (~US$14) vem **desligado** e não é necessário para os logs das Lambdas, que o próprio serviço Lambda envia ao CloudWatch. Para trocar Spot por capacidade garantida: `node_capacity_type = "ON_DEMAND"` (~US$70 em vez de ~US$21).
 
 **Destruir o ambiente após a apresentação.** **Destruir após a apresentação.**
 

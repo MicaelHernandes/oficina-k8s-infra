@@ -83,7 +83,7 @@ variable "ecr_repository_name" {
 }
 
 variable "enable_logs_vpc_endpoint" {
-  description = "Cria o VPC endpoint do CloudWatch Logs nas subnets privadas (~US$7/mês por AZ). Desligado por padrão para reduzir custo; ligue quando precisar depurar a Lambda de auth (repo 1), que sem ele roda sem logs, já que as subnets privadas não têm NAT."
+  description = "Cria o VPC endpoint de interface do CloudWatch Logs nas subnets privadas (~US$7/mês por AZ). Desligado por padrão. Não é necessário para as Lambdas: o próprio serviço Lambda envia os logs delas ao CloudWatch, mesmo em subnet sem NAT. Só serve a cargas nas subnets privadas que chamem a API do CloudWatch Logs diretamente."
   type        = bool
   default     = false
 }
