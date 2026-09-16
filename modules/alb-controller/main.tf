@@ -28,7 +28,7 @@ resource "helm_release" "alb_controller" {
   name       = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   chart      = "aws-load-balancer-controller"
-  version    = "1.8.1"
+  version    = "1.17.1" # controller v2.17.1; a v3.x exige CRDs da Gateway API
   namespace  = "kube-system"
 
   set {
@@ -66,7 +66,7 @@ resource "helm_release" "metrics_server" {
   name       = "metrics-server"
   repository = "https://kubernetes-sigs.github.io/metrics-server/"
   chart      = "metrics-server"
-  version    = "3.12.1"
+  version    = "3.14.0"
   namespace  = "kube-system"
 
   set {

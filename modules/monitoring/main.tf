@@ -40,7 +40,7 @@ resource "helm_release" "kube_prometheus_stack" {
   name       = "kube-prometheus-stack"
   repository = "https://prometheus-community.github.io/helm-charts"
   chart      = "kube-prometheus-stack"
-  version    = "62.7.0"
+  version    = "91.4.1"
   namespace  = kubernetes_namespace_v1.monitoring.metadata[0].name
 
   values = [yamlencode({
@@ -100,7 +100,7 @@ resource "helm_release" "loki" {
   name       = "loki"
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki-stack"
-  version    = "2.10.2"
+  version    = "2.10.3" # última versão; o chart foi descontinuado pela Grafana
   namespace  = kubernetes_namespace_v1.monitoring.metadata[0].name
 
   values = [yamlencode({
