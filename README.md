@@ -12,7 +12,7 @@ Infraestrutura Kubernetes na AWS (Terraform) do **Tech Challenge Fase 3 — Ofic
 ## Tecnologias
 
 - **Terraform** (backend S3 + lock DynamoDB), providers `aws`, `cloudflare`, `kubernetes`, `helm`.
-- **Amazon EKS** (K8s 1.31), managed node group `m7i-flex.large` **Spot** (1 nó, máx. 3) — HPA nativo. Tipo free-tier-eligible, exigido pelo Free plan da conta.
+- **Amazon EKS** (K8s 1.34, em suporte padrão até 01/12/2026), managed node group `m7i-flex.large` **Spot** (1 nó, máx. 3) — HPA nativo. Tipo free-tier-eligible, exigido pelo Free plan da conta.
 - **Amazon ECR**, **Amazon VPC** (2 AZs, **sem NAT Gateway** para reduzir custo).
 - **AWS Load Balancer Controller** (Ingress → ALB) + **metrics-server** (HPA).
 - **ACM** validado por DNS na **Cloudflare** (`codefive.com.br`).
@@ -120,6 +120,8 @@ Configuração enxuta, consumida dos créditos do Free plan:
 | **Total** | **~112** |
 
 Prometheus (retenção 6h) e Loki rodam sem volume, então não há EBS além do disco do nó. O VPC endpoint do CloudWatch Logs (~US$14) vem **desligado** e não é necessário para os logs das Lambdas, que o próprio serviço Lambda envia ao CloudWatch. Para trocar Spot por capacidade garantida: `node_capacity_type = "ON_DEMAND"` (~US$70 em vez de ~US$21).
+
+**Versão do Kubernetes:** mantenha `cluster_version` numa versão em **suporte padrão** (`aws eks describe-cluster-versions --version-status STANDARD_SUPPORT`). Em suporte estendido o control plane custa **US$0,60/h** em vez de US$0,10/h, cerca de US$12/dia a mais. Foi o que aconteceu com a 1.31 entre 11 e 16/09/2026: US$43,70 só de adicional.
 
 **Destruir o ambiente após a apresentação.** **Destruir após a apresentação.**
 
