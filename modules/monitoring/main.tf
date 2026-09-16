@@ -110,6 +110,16 @@ resource "helm_release" "loki" {
     promtail = {
       enabled = true
     }
+    # O datasource do Loki já é declarado no kube-prometheus-stack
+    # (grafana.additionalDataSources). O loki-stack criaria um segundo, com o
+    # mesmo nome e isDefault=true; junto com o Prometheus (padrão), o
+    # Grafana 13 recusa a configuração ("Only one datasource per organization
+    # can be marked as default") e entra em CrashLoopBackOff.
+    grafana = {
+      sidecar = {
+        datasources = { enabled = false }
+      }
+    }
   })]
 
   depends_on = [kubernetes_namespace_v1.monitoring]
