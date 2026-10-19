@@ -80,7 +80,7 @@ locals {
     "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:DescribeTable",
   ]
 
-  repo_policies = {
+  infra_policies = {
     "oficina-k8s-infra" = {
       actions = concat([
         "ec2:*", "eks:*", "ecr:*", "elasticloadbalancing:*",
@@ -106,17 +106,22 @@ locals {
         "logs:*", "sts:*"
       ], local.tf_backend_actions)
     }
-    "oficina-api" = {
-      actions = [
-        "ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage",
-        "ecr:PutImage", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload", "eks:DescribeCluster", "eks:ListClusters",
-        "ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath",
-        "secretsmanager:GetSecretValue", "sts:GetCallerIdentity"
-      ]
-    }
   }
+
+  # Microsserviços (Fase 4): deploy no EKS (ECR + kubectl) e o Terraform da
+  # própria infra em `infra/` — tópico SNS, filas SQS/DLQ, role IRSA do
+  # ServiceAccount e segredos do serviço.
+  app_service_actions = concat([
+    "ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability",
+    "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage",
+    "ecr:PutImage", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart",
+    "ecr:CompleteLayerUpload", "eks:DescribeCluster", "eks:ListClusters",
+    "sns:*", "sqs:*", "iam:*", "ssm:*", "secretsmanager:*", "sts:*"
+  ], local.tf_backend_actions)
+
+  repo_policies = merge(local.infra_policies, {
+    for s in var.app_services : s => { actions = local.app_service_actions }
+  })
 }
 
 data "aws_iam_policy_document" "repo" {
