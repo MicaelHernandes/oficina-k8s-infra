@@ -13,11 +13,19 @@ locals {
   # Nome do IngressGroup compartilhado — um único ALB serve app + grafana.
   ingress_group = "${var.project}-shared"
 
+  # Microsserviços da Fase 4 (um repo cada). Cada um ganha repositório ECR,
+  # role OIDC com permissões de deploy e acesso de admin ao cluster.
+  # oficina-api é o OS Service (orquestrador da saga).
+  app_services = [
+    "oficina-api",
+    "oficina-billing-service",
+    "oficina-execution-service",
+  ]
+
   # Repositórios que assumem roles OIDC criadas por este repo.
-  github_repos = [
+  github_repos = concat([
     "oficina-k8s-infra",
     "oficina-db-infra",
     "oficina-auth-lambda",
-    "oficina-api",
-  ]
+  ], local.app_services)
 }
