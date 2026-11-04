@@ -43,9 +43,9 @@ variable "node_max_size" {
   type        = number
 }
 
-variable "deploy_role_arn" {
-  description = "ARN da role OIDC do repo oficina-api (recebe admin do cluster)."
-  type        = string
+variable "deploy_role_arns" {
+  description = "Mapa repo -> ARN da role OIDC de deploy (recebe admin do cluster)."
+  type        = map(string)
 }
 
 variable "tags" {

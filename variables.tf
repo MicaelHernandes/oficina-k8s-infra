@@ -76,12 +76,6 @@ variable "github_owner" {
   default     = "MicaelHernandes"
 }
 
-variable "ecr_repository_name" {
-  description = "Nome do repositório ECR para a imagem da aplicação (repo oficina-api)."
-  type        = string
-  default     = "oficina-api"
-}
-
 variable "enable_logs_vpc_endpoint" {
   description = "Cria o VPC endpoint de interface do CloudWatch Logs nas subnets privadas (~US$7/mês por AZ). Desligado por padrão. Não é necessário para as Lambdas: o próprio serviço Lambda envia os logs delas ao CloudWatch, mesmo em subnet sem NAT. Só serve a cargas nas subnets privadas que chamem a API do CloudWatch Logs diretamente."
   type        = bool

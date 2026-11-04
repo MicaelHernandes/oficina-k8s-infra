@@ -34,8 +34,13 @@ output "node_security_group_id" {
 }
 
 output "ecr_repository_url" {
-  description = "URL do repositório ECR da aplicação."
-  value       = module.ecr.repository_url
+  description = "URL do repositório ECR do OS Service (oficina-api)."
+  value       = module.ecr["oficina-api"].repository_url
+}
+
+output "ecr_repository_urls" {
+  description = "Mapa microsserviço -> URL do repositório ECR."
+  value       = { for k, m in module.ecr : k => m.repository_url }
 }
 
 output "certificate_arn" {
@@ -91,10 +96,29 @@ resource "aws_ssm_parameter" "node_security_group_id" {
   tags  = local.tags
 }
 
+# Mantido para o deploy.yml do oficina-api (Fase 3).
 resource "aws_ssm_parameter" "ecr_repository_url" {
   name  = "/oficina/ecr/repository_url"
   type  = "String"
-  value = module.ecr.repository_url
+  value = module.ecr["oficina-api"].repository_url
+  tags  = local.tags
+}
+
+resource "aws_ssm_parameter" "ecr_repository_urls" {
+  for_each = module.ecr
+
+  name  = "/oficina/ecr/${each.key}/repository_url"
+  type  = "String"
+  value = each.value.repository_url
+  tags  = local.tags
+}
+
+# IRSA: a infra de cada microsserviço cria a role do seu ServiceAccount
+# (SQS/SNS) confiando neste OIDC provider.
+resource "aws_ssm_parameter" "eks_oidc_provider_arn" {
+  name  = "/oficina/eks/oidc_provider_arn"
+  type  = "String"
+  value = module.eks.oidc_provider_arn
   tags  = local.tags
 }
 

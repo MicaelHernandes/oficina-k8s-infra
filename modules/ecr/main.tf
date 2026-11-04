@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# ECR — registry da imagem da aplicação (repo oficina-api).
+# ECR — registry da imagem de um microsserviço.
 # Lifecycle mantém apenas as 10 imagens mais recentes.
 # ---------------------------------------------------------------------------
 resource "aws_ecr_repository" "this" {
