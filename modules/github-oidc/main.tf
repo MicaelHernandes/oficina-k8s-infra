@@ -109,14 +109,14 @@ locals {
   }
 
   # Microsserviços (Fase 4): deploy no EKS (ECR + kubectl) e o Terraform da
-  # própria infra em `infra/` — tópico SNS, filas SQS/DLQ, role IRSA do
-  # ServiceAccount e segredos do serviço.
+  # própria infra em `infra/` — tópico SNS, filas SQS/DLQ, tabela DynamoDB
+  # (NoSQL do Billing), role IRSA do ServiceAccount e segredos do serviço.
   app_service_actions = concat([
     "ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability",
     "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage",
     "ecr:PutImage", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart",
     "ecr:CompleteLayerUpload", "eks:DescribeCluster", "eks:ListClusters",
-    "sns:*", "sqs:*", "iam:*", "ssm:*", "secretsmanager:*", "sts:*"
+    "sns:*", "sqs:*", "dynamodb:*", "iam:*", "ssm:*", "secretsmanager:*", "sts:*"
   ], local.tf_backend_actions)
 
   repo_policies = merge(local.infra_policies, {
