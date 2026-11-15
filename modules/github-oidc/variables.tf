@@ -18,6 +18,11 @@ variable "repos" {
   type        = list(string)
 }
 
+variable "app_services" {
+  description = "Repositórios de microsserviços (subconjunto de repos) com a política de deploy + infra própria."
+  type        = list(string)
+}
+
 variable "tags" {
   description = "Tags padrão."
   type        = map(string)

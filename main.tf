@@ -45,19 +45,26 @@ module "eks" {
   node_desired_size  = var.node_desired_size
   node_max_size      = var.node_max_size
 
-  # Role de deploy do repo da aplicação recebe acesso admin ao cluster para
+  # Roles de deploy dos microsserviços recebem acesso admin ao cluster para
   # rodar `kubectl apply` na pipeline.
-  deploy_role_arn = module.github_oidc.github_role_arns["oficina-api"]
+  deploy_role_arns = { for s in local.app_services : s => module.github_oidc.github_role_arns[s] }
 
   tags = local.tags
 }
 
-# --- Registry de imagens ----------------------------------------------------
+# --- Registry de imagens (um repositório por microsserviço) -----------------
 module "ecr" {
-  source = "./modules/ecr"
+  source   = "./modules/ecr"
+  for_each = toset(local.app_services)
 
-  repository_name = var.ecr_repository_name
+  repository_name = each.key
   tags            = local.tags
+}
+
+# Fase 3 tinha um único `module.ecr`; preserva o repositório existente.
+moved {
+  from = module.ecr
+  to   = module.ecr["oficina-api"]
 }
 
 # --- OIDC GitHub -> AWS -----------------------------------------------------
@@ -68,6 +75,7 @@ module "github_oidc" {
   account_id   = data.aws_caller_identity.current.account_id
   github_owner = var.github_owner
   repos        = local.github_repos
+  app_services = local.app_services
   tags         = local.tags
 }
 

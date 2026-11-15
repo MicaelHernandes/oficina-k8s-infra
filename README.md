@@ -7,13 +7,15 @@ Infraestrutura Kubernetes na AWS (Terraform) do **Tech Challenge Fase 3 — Ofic
 | **oficina-k8s-infra** (este) | VPC, EKS, ECR, ALB Controller, ACM/DNS, monitoring, OIDC |
 | [oficina-db-infra](https://github.com/MicaelHernandes/oficina-db-infra) | RDS PostgreSQL gerenciado |
 | [oficina-auth-lambda](https://github.com/MicaelHernandes/oficina-auth-lambda) | Lambda de auth por CPF + API Gateway HTTP API |
-| [oficina-api](https://github.com/MicaelHernandes/oficina-api) | Aplicação Laravel no EKS |
+| [oficina-api](https://github.com/MicaelHernandes/oficina-api) | OS Service (Laravel no EKS) — orquestrador da saga |
+| [oficina-billing-service](https://github.com/MicaelHernandes/oficina-billing-service) | Billing Service — orçamento e pagamento (Mercado Pago) |
+| [oficina-execution-service](https://github.com/MicaelHernandes/oficina-execution-service) | Execution Service — fila de execução |
 
 ## Tecnologias
 
 - **Terraform** (backend S3 + lock DynamoDB), providers `aws`, `cloudflare`, `kubernetes`, `helm`.
 - **Amazon EKS** (K8s 1.34, em suporte padrão até 01/12/2026), managed node group `m7i-flex.large` **Spot** (1 nó, máx. 3) — HPA nativo. Tipo free-tier-eligible, exigido pelo Free plan da conta.
-- **Amazon ECR**, **Amazon VPC** (2 AZs, **sem NAT Gateway** para reduzir custo).
+- **Amazon ECR** (um repositório por microsserviço), **Amazon VPC** (2 AZs, **sem NAT Gateway** para reduzir custo).
 - **AWS Load Balancer Controller** (Ingress → ALB) + **metrics-server** (HPA).
 - **ACM** validado por DNS na **Cloudflare** (`codefive.com.br`).
 - **kube-prometheus-stack** (Prometheus + Alertmanager + Grafana) + **Loki/Promtail**.
@@ -34,7 +36,7 @@ flowchart TB
         Lslot["Lambda (repo 1)"]
       end
     end
-    ECR["ECR: oficina-api"]
+    ECR["ECR: oficina-api,<br/>billing, execution"]
     ACM["ACM cert<br/>api/app/grafana"]
     OIDC["OIDC + IAM roles<br/>(por repo)"]
   end
@@ -51,8 +53,8 @@ O ALB é **único e compartilhado** entre `app.codefive.com.br` (repo 4) e `graf
 | Módulo | Conteúdo |
 |---|---|
 | `modules/vpc` | VPC 2 AZs, subnets pub/priv, sem NAT, tags de subnet para o ALB Controller, VPC endpoint do CloudWatch Logs |
-| `modules/eks` | Cluster EKS, node group `m7i-flex.large` (1–3), add-ons, access entry para o deploy da app |
-| `modules/ecr` | Repositório `oficina-api`, lifecycle de 3 imagens |
+| `modules/eks` | Cluster EKS, node group `m7i-flex.large` (1–3), add-ons, access entries para o deploy dos microsserviços |
+| `modules/ecr` | Um repositório por microsserviço (`for_each` em `local.app_services`), lifecycle de 3 imagens |
 | `modules/alb-controller` | IRSA + helm do AWS Load Balancer Controller + metrics-server |
 | `modules/dns-tls` | Certificado ACM (SAN api/app/grafana) + registros de validação na Cloudflare |
 | `modules/monitoring` | kube-prometheus-stack + Loki, Grafana via Ingress ALB, secret do admin |
@@ -91,6 +93,8 @@ gh secret set AWS_ROLE_ARN -R MicaelHernandes/oficina-k8s-infra   -b "arn:aws:ia
 gh secret set AWS_ROLE_ARN -R MicaelHernandes/oficina-db-infra    -b "arn:aws:iam::909314263457:role/oficina-gha-oficina-db-infra"
 gh secret set AWS_ROLE_ARN -R MicaelHernandes/oficina-auth-lambda -b "arn:aws:iam::909314263457:role/oficina-gha-oficina-auth-lambda"
 gh secret set AWS_ROLE_ARN -R MicaelHernandes/oficina-api         -b "arn:aws:iam::909314263457:role/oficina-gha-oficina-api"
+gh secret set AWS_ROLE_ARN -R MicaelHernandes/oficina-billing-service   -b "arn:aws:iam::909314263457:role/oficina-gha-oficina-billing-service"
+gh secret set AWS_ROLE_ARN -R MicaelHernandes/oficina-execution-service -b "arn:aws:iam::909314263457:role/oficina-gha-oficina-execution-service"
 ```
 
 ## Deploy (automático)
@@ -104,7 +108,7 @@ PRs e pushes em `homolog` rodam `.github/workflows/ci.yml` (fmt, validate, tflin
 
 ## Outputs (também no SSM `/oficina/...`)
 
-`cluster_name`, `cluster_endpoint`, `vpc_id`, `private_subnet_ids`, `public_subnet_ids`, `node_security_group_id`, `ecr_repository_url`, `certificate_arn`, `oidc_provider_arn`, `github_role_arns`.
+`cluster_name`, `cluster_endpoint`, `vpc_id`, `private_subnet_ids`, `public_subnet_ids`, `node_security_group_id`, `ecr_repository_url` (OS Service), `ecr_repository_urls` (SSM `/oficina/ecr/<serviço>/repository_url`), `certificate_arn`, `oidc_provider_arn` (SSM `/oficina/eks/oidc_provider_arn`, usado pelo IRSA da infra de cada microsserviço), `github_role_arns`.
 
 ## Custo estimado
 

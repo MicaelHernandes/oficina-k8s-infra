@@ -6,8 +6,8 @@
 # - Nós nas subnets PÚBLICAS (sem NAT), com IP público para registrar no
 #   control plane e puxar imagens do ECR.
 # - Add-ons essenciais + EBS CSI (política anexada à role dos nós).
-# - Access entry dando admin do cluster à role de deploy do repo da app,
-#   para a pipeline rodar `kubectl apply`.
+# - Access entries dando admin do cluster às roles de deploy dos
+#   microsserviços, para as pipelines rodarem `kubectl apply`.
 # ---------------------------------------------------------------------------
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
@@ -49,10 +49,12 @@ module "eks" {
     }
   }
 
-  # Concede admin do cluster à pipeline de deploy do repo oficina-api.
+  # Concede admin do cluster às pipelines de deploy dos microsserviços.
+  # A entrada do oficina-api mantém a chave "deploy" da Fase 3 para não ser
+  # recriada.
   access_entries = {
-    deploy = {
-      principal_arn = var.deploy_role_arn
+    for repo, arn in var.deploy_role_arns : (repo == "oficina-api" ? "deploy" : repo) => {
+      principal_arn = arn
       policy_associations = {
         admin = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
